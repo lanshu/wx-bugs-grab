@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-3.2.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<!-- 配置文件位置 -->
+	<context:property-placeholder location="classpath:resources.properties" ignore-unresolvable="true" />
+	
+	<!-- 注解 去除事物的扫描 -->
+    <context:component-scan base-package="cn.pigpi.grab">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />   
+    </context:component-scan>
+    
+    <!-- 开启AOP监听 只对当前配置文件有效 -->
+    <aop:aspectj-autoproxy expose-proxy="true"/>
+		
+	<!-- 数据源 -->
+	<!-- 数据库连接池Druid配置 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" 
+		destroy-method="close">
+		<!-- 基本属性 url、user、password -->
+		<property name="driverClassName" value="${db.driverClassName}" />
+		<property name="url" value="${db.url}" />
+		<property name="username" value="${db.username}" />
+		<property name="password" value="${db.password}" />
+
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="maxActive" value="${db.maxActive}" />
+		<property name="initialSize" value="${db.initialSize}" />
+
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="${db.maxWait}" />
+
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000"></property>
+
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="300000"></property>
+
+		<property name="validationQuery" value="select 1 from dual" />
+		<property name="testOnBorrow" value="true" />
+		<property name="testWhileIdle" value="true"></property>
+		<property name="testOnReturn" value="false"></property>
+
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<property name="poolPreparedStatements" value="true"></property>
+		<property name="maxPoolPreparedStatementPerConnectionSize"
+			value="20"></property>
+
+		<!-- 强制关闭不使用的连接 -->
+		<property name="removeAbandoned" value="${db.removeAbandoned}" />
+		<property name="removeAbandonedTimeout" value="${db.removeAbandonedTimeout}" />
+		<!-- 配置监控统计拦截的filters -->
+		<property name="filters" value="stat"></property>
+		<property name="proxyFilters">
+			<list>
+				<ref bean="wall-filter" />
+			</list>
+		</property> 
+	</bean>
+	
+	<bean id="wall-filter" class="com.alibaba.druid.wall.WallFilter">
+		<!-- 对被认为是攻击的SQL进行LOG.error输出 ，暂时设置为false -->
+		<property name="logViolation" value="false" />
+		<!-- 对被认为是攻击的SQL抛出SQLExcepton 为不影响业务功能的继续执行，暂时设置为false，但是仍然可以在监控页面监控到信息 -->
+		<property name="throwException" value="false" />
+	</bean>
+ 	
+	<!--配置druid监控spring begin-->
+	<bean id="druid-stat-interceptor" class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor"></bean>
+	<bean id="druid-stat-pointcut" class="org.springframework.aop.support.JdkRegexpMethodPointcut" scope="prototype">
+		<property name="patterns">
+			<list>
+				<value>cn.pigpi.grab.service.*</value>
+			</list>
+		</property>
+	</bean>
+	<aop:config>
+		<aop:advisor advice-ref="druid-stat-interceptor" pointcut-ref="druid-stat-pointcut" />
+	</aop:config>
+	<!--配置druid监控spring end-->
+	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis-sqlMapConfig.xml"></property>
+        <property name="mapperLocations">
+            <array>
+                <value>classpath*:cn/pigpi/grab/**/mapper/*.xml</value>
+            </array>
+        </property>
+        <property name="plugins">
+            <array>
+            	<!-- SQL执行拦截器, 上线时可以整体去掉该拦截器 -->
+            	<bean class="cn.pigpi.grab.core.interceptor.ExecuteSqlInterceptor" />
+                <bean class="com.github.pagehelper.PageHelper">
+                    <property name="properties">
+                        <value>
+                            dialect=oracle
+                            reasonable=false
+                            pageSizeZero=true
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+    
+    <bean class="tk.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.pigpi.grab.dao,cn.pigpi.grab.core.dao"/>
+        <!-- 3.2.2版本新特性，markerInterface可以起到mappers配置的作用，详细情况需要看Marker接口类-->
+        <property name="markerInterface" value="cn.pigpi.grab.core.dao.IBaseMapper"/> 
+        <!-- 通用Mapper通过属性注入进行配置，默认不配置时会注册Mapper<T>接口-->
+        <property name="properties">
+            <value>
+            	mappers=cn.pigpi.grab.core.dao.IBaseMapper
+            	ORDER=BEFORE
+            </value>
+        </property>
+    </bean>
+    
+    <!-- 配置SQLSession模板 -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- 使用JDBC事务 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- 使用annotation注解方式配置事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!-- AOP配置事务 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="query*" read-only="true" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" rollback-for="Throwable" />
+			<tx:method name="update*" propagation="REQUIRED" rollback-for="Throwable" />
+			<tx:method name="insert*" propagation="REQUIRED" rollback-for="Throwable" />
+			<tx:method name="*" propagation="REQUIRED" rollback-for="Throwable" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 配置AOP切面 -->
+	<aop:config>
+		<aop:pointcut id="transactionPointcut" expression="(execution (* cn.pigpi.grab.service..*.*(..)))" />
+		<aop:advisor pointcut-ref="transactionPointcut" advice-ref="txAdvice" />
+	</aop:config>
+</beans>

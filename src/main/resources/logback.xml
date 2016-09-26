@@ -1,0 +1,74 @@
+<configuration scan="true" scanPeriod="60 seconds" debug="false"> 
+	<contextName>edu-mobile</contextName>
+	<property name="BASE_HOME" value="/var/log/edu-log" /><!-- log目录 -->
+	<property name="BACKUP_HOME" value="/var/log/edu-log" /><!-- log目录 -->
+    <!-- 定义控制台输出 -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- 定义过滤器 相比logger内定义优先级高   -->
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>info</level>
+		</filter>
+		<!-- 定义日志格式 -->
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>
+				%date{yyyy-MM-dd HH:mm:ss} %level [%thread] %10logger[%file:%line] - %msg%n
+			</pattern>
+		</layout>
+	</appender>
+	<!-- 访问日志 --> 
+	<appender name="ACCESS" class="ch.qos.logback.core.rolling.RollingFileAppender">  
+        <Encoding>UTF-8</Encoding>  
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">  
+              <FileNamePattern>${BACKUP_HOME}/%d{yyyy-MM-dd}/edu-mobile-access.%d{yyyyMMdd}.log</FileNamePattern>  
+              <MaxHistory>30</MaxHistory>   
+        </rollingPolicy>  
+        <layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>
+			%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n   
+            </pattern>
+		</layout> 
+	</appender>    
+	<!-- 错误日志 --> 
+	<appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">  
+        <Encoding>UTF-8</Encoding>  
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">  
+              <FileNamePattern>${BACKUP_HOME}/%d{yyyy-MM-dd}/edu-mobile-error.%d{yyyyMMdd}.log</FileNamePattern>  
+              <MaxHistory>30</MaxHistory>   
+        </rollingPolicy>  
+        <layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>
+			%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n   
+            </pattern>
+		</layout> 
+	</appender>  
+ 		
+ 	<!-- 后台业务日志 -->
+ 	<appender name="SERVICE" class="ch.qos.logback.core.rolling.RollingFileAppender">  
+ 		<Encoding>UTF-8</Encoding>  
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">  
+              <FileNamePattern>${BACKUP_HOME}/%d{yyyy-MM-dd}/edu-mobile-service.%d{yyyyMMdd}.log</FileNamePattern>  
+              <MaxHistory>30</MaxHistory>   
+        </rollingPolicy>  
+        <layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>
+			%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n   
+            </pattern>
+		</layout> 
+    </appender>
+    
+    <logger name="error" additivity="false" level="info">
+		<appender-ref ref="ERROR" />
+	</logger>
+	
+	<logger name="access" additivity="false" level="info">
+		<appender-ref ref="ACCESS" />
+	</logger>
+	
+	<logger name="service" additivity="false" level="info">
+		<appender-ref ref="SERVICE" />
+	</logger>
+	
+	<root level="info">  
+	    <appender-ref ref="STDOUT" />  
+	</root>  
+ </configuration>  
