@@ -1,26 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>cn.pigpi</groupId>
 	<artifactId>wx-bugs-grab</artifactId>
 	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>wx-bugs-grab</name>
-	<url>http://maven.apache.org</url>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.ftl</include>
+					<include>**/*.properties</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.ftl</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.5</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.4</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<version>2.5</version>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.mybatis.generator</groupId>
+				<artifactId>mybatis-generator-maven-plugin</artifactId>
+				<version>1.3.2</version>
+				<configuration>
+					<configurationFile>${basedir}/src/main/resources/generator/generatorConfig.xml</configurationFile>
+					<overwrite>true</overwrite>
+					<verbose>true</verbose>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.oracle</groupId>
+						<artifactId>ojdbc6</artifactId>
+						<version>11.2.0.3</version>
+					</dependency>
+					<dependency>
+						<groupId>tk.mybatis</groupId>
+						<artifactId>mapper</artifactId>
+						<version>${mapper.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		    <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-surefire-plugin</artifactId>
+		        <version>2.7.1</version>
+		        <configuration>
+		          <skip>true</skip>
+		        </configuration>
+		      </plugin>
+		</plugins>
+	</build>
+	
 	<dependencies>
+		<!-- 测试相关jar包 -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- 
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		-->
 		
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
-		
+		<!-- 
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>${jetty.version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>javax.servlet</artifactId>
+					<groupId>org.eclipse.jetty.orbit</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		 -->
 		<!-- cglib asm 相关jar包 -->
 		<dependency>
 			<groupId>cglib</groupId>
@@ -85,12 +218,12 @@
 			<artifactId>commons-logging</artifactId>
 			<version>${commons.logging.version}</version>
 		</dependency>
-		
+
 		<!-- data source 相关jar包 -->
 		<dependency>
-		    <groupId>mysql</groupId>
-		    <artifactId>mysql-connector-java</artifactId>
-		    <version>6.0.4</version>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -108,7 +241,15 @@
 			<artifactId>logback-classic</artifactId>
 			<version>${logback.version}</version>
 		</dependency>
-		
+
+		<!-- web相关jar包 
+		<dependency> 
+			<groupId>org.apache.openejb</groupId> 
+			<artifactId>javaee-api</artifactId> 
+			<version>6.0-6</version> 
+			<scope>provided</scope> 
+		</dependency> 
+		-->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
@@ -199,6 +340,13 @@
 			<version>${spring.version}</version>
 		</dependency>
 		
+	<!-- 	<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-instrument</artifactId>
+			<version>${spring.version}</version>
+		</dependency> -->
+				
+
 		<!-- spring jpa -->
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -245,7 +393,56 @@
 			<artifactId>mapper</artifactId>
 			<version>${mapper.version}</version>
 		</dependency>
-		
+
+		<!-- hibernate validator 相关jar包 
+		<dependency> 
+			<groupId>org.hibernate</groupId> 
+			<artifactId>hibernate-validator</artifactId> 
+			<version>${hibernate.validator.version}</version> 
+		</dependency> -->
+
+		<!-- html处理jar包 -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>${jsoup.version}</version>
+		</dependency>
+
+		<!-- apache shiro 相关jar包 -->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-aspectj</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
+		<!-- <dependency> <groupId>org.apache.shiro</groupId> <artifactId>shiro-ehcache</artifactId> 
+			<version>${shiro.version}</version> </dependency> -->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-spring</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-quartz</artifactId>
+			<version>${shiro.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>quartz</artifactId>
+					<groupId>org.opensymphony.quartz</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
 		<!-- quartz -->
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
@@ -264,18 +461,103 @@
 			<version>${quartz.version}</version>
 		</dependency>
 
+		<!-- encache 相关jar包 
+		<dependency> 
+			<groupId>net.sf.ehcache</groupId> 
+			<artifactId>ehcache-core</artifactId> 
+			<version>${ehcache.core.version}</version> 
+			<scope>compile</scope> 
+			<exclusions> 
+				<exclusion> 
+				<artifactId>slf4j-api</artifactId> 
+				<groupId>org.slf4j</groupId> 
+				</exclusion>
+			</exclusions> 
+		</dependency> -->
+
 		<!-- json 相关jar包 -->
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.3</version>
-		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
 			<version>${fastjson.version}</version>
 		</dependency>
-		
+
+		<!-- 安全相关jar包 -->
+
+		<!-- httpclient相关jar包 -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpclient.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+			
+		</dependency>
+			<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpcore</artifactId>
+		    <version>${httpcore.version}</version>
+		</dependency>
+
+		<!--dom4j -->
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>${dom4j.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- 时间相关 -->
+		<!--日期美化 -->
+		<dependency>
+			<groupId>org.ocpsoft.prettytime</groupId>
+			<artifactId>prettytime</artifactId>
+			<version>${prettytime.version}</version>
+		</dependency>
+		<!-- joda time 相关jar包 -->
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${joda-time.version}</version>
+		</dependency>
+
+		<!-- jcaptcha 验证码 -->
+		<dependency>
+			<groupId>fakepath</groupId>
+			<artifactId>jcaptcha-api</artifactId>
+			<version>${jcaptcha.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>fakepath</groupId>
+			<artifactId>jcaptcha</artifactId>
+			<version>${jcaptcha.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>fakepath</groupId>
+			<artifactId>jcaptcha-integration-simple-servlet</artifactId>
+			<version>${jcaptcha.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>servlet-api</artifactId>
+					<groupId>javax.servlet</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.jhlabs</groupId>
+			<artifactId>filters</artifactId>
+			<version>2.0.235-1</version>
+		</dependency>
+
 		<!-- redis -->
 		<dependency>
 			<groupId>redis.clients</groupId>
@@ -286,14 +568,121 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-redis</artifactId>
-			<version>1.8.0.RELEASE</version>
+			<version>1.6.0.RELEASE</version>
+		</dependency>
+
+		<!-- 图片处理 -->
+		<dependency>
+			<groupId>org.im4java</groupId>
+			<artifactId>im4java</artifactId>
+			<version>${im4java.version}</version>
+		</dependency>
+
+		<!-- jpush推送 -->
+		<dependency>
+			<groupId>cn.jpush.api</groupId>
+			<artifactId>jpush-client</artifactId>
+			<version>${jpush-client.version}</version>
+		</dependency>
+		<!-- jpush 依赖gson的包 -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.3</version>
+		</dependency>
+
+		<!-- poi -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
+
+		<!-- websocket -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+	      	<groupId>org.springframework</groupId>
+	        <artifactId>spring-messaging</artifactId>
+	        <version>${spring.version}</version>
+	    </dependency>
+	    
+	    <!-- jackson 网关项目使用 -->
+	    <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+	  <!--   <dependency>
+		    <groupId>org.apache.tomcat</groupId>  
+		    <artifactId>tomcat-websocket-api</artifactId>  
+		    <version>7.0.64</version>  
+		</dependency>  
+		
+		<dependency>  
+		    <groupId>javax</groupId>  
+		    <artifactId>javaee-api</artifactId>  
+		    <version>7.0</version>  
+		</dependency> -->
+		
+		<!-- mq -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-core</artifactId>
+			<version>${activemq.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<version>${activemq-client.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-spring</artifactId>
+			<version>${activemq.version}</version>
 		</dependency>
 		
-		<!-- jpa -->
 		<dependency>
-			<groupId>javax.persistence</groupId>
-			<artifactId>persistence-api</artifactId>
-			<version>${persistence.version}</version>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jms</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		
+		<!-- 农行接口 -->
+		<dependency>
+			<groupId>com.abc.trustpay</groupId>
+			<artifactId>TrustPayClient</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.ezmorph</groupId>
+			<artifactId>ezmorph</artifactId>
+			<version>1.0.6</version>
 		</dependency>
 		
 		<!-- webmagic -->
@@ -308,14 +697,20 @@
 		    <version>0.5.3</version>
 		</dependency>
 		
-		<!-- joda time 相关jar包 -->
+		<!-- jpa -->
 		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>${joda-time.version}</version>
+			<groupId>javax.persistence</groupId>
+			<artifactId>persistence-api</artifactId>
+			<version>${persistence.version}</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>mysql</groupId>
+		    <artifactId>mysql-connector-java</artifactId>
+		    <version>5.1.38</version>
 		</dependency>
 	</dependencies>
-	
+
 	<properties>
 		<persistence.version>1.0</persistence.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -384,8 +779,5 @@
 		
 		<jackson.version>2.6.0</jackson.version>
 	</properties>
-	
-	<build>
-		<finalName>wx-bugs-grab</finalName>
-	</build>
+
 </project>
